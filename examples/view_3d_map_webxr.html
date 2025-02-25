@@ -7,6 +7,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <link rel="stylesheet" type="text/css" href="css/example.css">
+        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
+        <link rel="stylesheet" type="text/css" href="css/widgets.css">
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+
+
+
     </head>
     <body>
         <div id="viewerDiv"></div>
@@ -22,20 +29,39 @@
 
         <!-- Import iTowns source code -->
         <script src="../dist/itowns.js"></script>
+        <script src="../dist/debug.js"></script>
+        <!-- Import iTowns Widgets plugin -->
+        <script src="../dist/itowns_widgets.js"></script>
+        <!-- Import iTowns LoadingScreen and GuiTools plugins -->
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="js/GUI/LoadingScreen.js"></script>
 
         <script type="module">
 
             import { VRButton } from 'three/addons/webxr/VRButton.js';
+            import {zoomToLayer} from './jsm/OGC3DTilesHelper.js';
+
+            // ---------- CREATE A GlobeView FOR SUPPORTING DATA VISUALIZATION : ----------
+            const tile3DCoordinates = new itowns.Coordinates('EPSG:4978', 4413284.5, -18949.275390625, 4589538.5); // 4412106.042879028, -26370.61912189091, 4590341.467693916);
+            const mountainsCoordinates = new itowns.Coordinates('EPSG:4326', 6.227, 45.167);
+            const seteCoordinates = new itowns.Coordinates('EPSG:4326',3.6968333,43.3975833 );
 
             // ---------- SETUP THE VR VIEW : ----------
 
             // Define camera initial position
             const placement = {
-                coord: new itowns.Coordinates('EPSG:4326', 6.227, 45.167),
+                coord: seteCoordinates,
+                range: 300,
+                tilt: 5,
+                heading: 10,
+                /**
                 range: 15000,
                 tilt: 5,
                 heading: 62,
-            }
+                */
+            };
+
+
 
             // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
             const viewerDiv = document.getElementById('viewerDiv');
@@ -47,6 +73,9 @@
             const vrButton = VRButton.createButton(view.renderer);
             viewerDiv.appendChild(vrButton);
 
+            // Setup loading screen and debug menu
+            setupLoadingScreen(viewerDiv, view);
+            var menuGlobe = new GuiTools('menuDiv', view, 300);
             // ---------- DISPLAY ORTHO-IMAGES : ----------
 
             // Add one imagery layer to the scene. This layer's properties are
@@ -57,6 +86,25 @@
                 view.addLayer(new itowns.ColorLayer('Ortho', config),
                 );
             });
+
+            // Create a new Layer 3d-tiles For Pointcloud
+
+            const source = new itowns.OGC3DTilesSource({ url: "https://raw.githubusercontent.com/iTowns/iTowns2-sample-data/master/pointclouds/pnts-sete-2021-0756_6256/tileset.json" });
+            const pointLayer = new itowns.OGC3DTilesLayer('3DTiles', {
+                source,
+                pntsSizeMode:1
+
+            },);
+
+            view.addLayer(
+                pointLayer
+            );
+
+
+            // Add the UI Debug
+            var d = new debug.Debug(view, menuGlobe.gui);
+            debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
+            debug.create3dTilesDebugUI(menuGlobe.gui, view, pointLayer, d);
 
             // ---------- DISPLAY A DIGITAL ELEVATION MODEL : ----------
 

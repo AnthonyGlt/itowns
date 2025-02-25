@@ -98,6 +98,8 @@ module.exports = () => {
             devMiddleware: {
                 publicPath: '/dist/',
             },
+            server: 'https',
+
             static: {
                 directory: path.resolve(__dirname, './'),
                 watch: {

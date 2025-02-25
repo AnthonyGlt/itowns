@@ -32,6 +32,7 @@ const initializeWebXR = (view, options) => {
         view._camXR = view.camera3D.clone();
 
         // Important to see the controllers -> maybe could be improved
+        // view._camXR.far = 2000000;
         view._camXR.far = 2000000;
         view._camXR.near = 0.1;
         view._camXR.updateProjectionMatrix();
