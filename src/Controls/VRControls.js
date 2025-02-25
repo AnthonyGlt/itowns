@@ -37,7 +37,7 @@ class VRControls {
         //  Add a light for the controllers
         this.groupXR.add(new THREE.HemisphereLight(0xa5a5a5, 0x898989, 3));
         this.raycaster = new THREE.Raycaster();
-
+        this.raycaster.params.Points.threshold = 0.1;   //  buffer of precision
         const controllerModelFactory = new XRControllerModelFactory();
 
         for (let i = 0; i < 2; i++) {

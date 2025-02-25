@@ -98,13 +98,15 @@
 
             view.addLayer(
                 pointLayer
-            );
+            )
+            pointLayer.whenReady
+                .then(() => debug.createOGC3DTilesDebugUI( menuGlobe.gui, view, pointLayer));
 
 
             // Add the UI Debug
-            var d = new debug.Debug(view, menuGlobe.gui);
-            debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
-            debug.create3dTilesDebugUI(menuGlobe.gui, view, pointLayer, d);
+            // var d = new debug.Debug(view, menuGlobe.gui);
+            // debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
+            // debug.create3dTilesDebugUI(menuGlobe.gui, view, pointLayer, d);
 
             // ---------- DISPLAY A DIGITAL ELEVATION MODEL : ----------
 
