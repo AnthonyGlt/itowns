@@ -23,6 +23,7 @@ class VRControls {
 
         this.rightButtonPressed = false;
         this.controllers = [];
+        // this.controllers = {};
         this.initControllers();
         this.initMarker();
     }
@@ -37,7 +38,7 @@ class VRControls {
         //  Add a light for the controllers
         this.groupXR.add(new THREE.HemisphereLight(0xa5a5a5, 0x898989, 3));
         this.raycaster = new THREE.Raycaster();
-        this.raycaster.params.Points.threshold = 0.1;   //  buffer of precision
+        this.raycaster.params.Points.threshold = 0.5;   //  buffer of precision
         const controllerModelFactory = new XRControllerModelFactory();
 
         for (let i = 0; i < 2; i++) {
@@ -56,6 +57,7 @@ class VRControls {
                 gripController.userData.handedness = event.data.handedness;
                 this.bindGripController(controllerModelFactory, gripController, this.groupXR);
                 this.controllers.push(controller);
+                // this.controllers[controller.name] = controller;
                 this.groupXR.add(gripController);
 
 
@@ -76,6 +78,22 @@ class VRControls {
         );
         this.marker.visible = false;
         this.view.scene.add(this.marker);
+
+        this.selectMarker1 = new THREE.Mesh(
+            // new THREE.CircleGeometry(2005, 32).rotateX(-Math.PI / 2),
+            new THREE.SphereGeometry(1, 32, 32),
+            new THREE.MeshBasicMaterial({ color: 0x00FF00 }),
+        );
+        this.selectMarker1.visible = false;
+        this.view.scene.add(this.selectMarker1);
+
+        this.selectMarker2 = new THREE.Mesh(
+            // new THREE.CircleGeometry(2005, 32).rotateX(-Math.PI / 2),
+            new THREE.SphereGeometry(1, 32, 32),
+            new THREE.MeshBasicMaterial({ color: 0x0000FF }),
+        );
+        this.selectMarker2.visible = false;
+        this.view.scene.add(this.selectMarker2);
     }
 
 
@@ -197,7 +215,77 @@ Adding a few internal states for reactivity
                 }
             }
         }
-        this.onSelectRightStart();
+    }
+
+    createLine(pt1, pt2) {
+        const material = new THREE.LineBasicMaterial({
+            color: 0xff00ff,
+        });
+
+
+        const geometry = new THREE.BufferGeometry().setFromPoints([pt1, pt2]);
+
+        this.line = new THREE.Line(geometry, material);
+        this.view.scene.add(this.line);
+    }
+
+    updateLine(pt1, pt2) {
+        if (!this.line) {
+            return this.createLine(pt1, pt2);
+        }
+        // Assuming this.line already exists and its geometry has 2 vertices
+        const positions = this.line.geometry.attributes.position.array;
+
+        // Update first point (pt1)
+        positions[0] = pt1.x;
+        positions[1] = pt1.y;
+        positions[2] = pt1.z;
+
+        // Update second point (pt2)
+        positions[3] = pt2.x;
+        positions[4] = pt2.y;
+        positions[5] = pt2.z;
+
+        // Flag the position attribute for update
+        this.line.geometry.attributes.position.needsUpdate = true;
+        this.line.visible = true;
+    }
+
+    updateMarker(marker = this.marker) {
+        // todo getter right/left
+        let ctrl = this.controllers.filter(o => o.name === 'right');
+        if (!ctrl || !ctrl[0]) { return; }
+        ctrl = ctrl[0];
+        this.raycaster.setFromXRController(ctrl);
+        // const interactiveLayers =  [];
+        const interactiveLayers = this.view.getLayers().filter(l => l.isOGC3DTilesLayer).map(o => o.object3d);
+
+        // const intersects = this.raycaster.intersectObjects(interactiveLayers, true);
+        const intersects = this.raycaster.intersectObjects(interactiveLayers);
+        const line = ctrl.getObjectByName('ctrlHelper');
+
+        if (intersects.length > 0) {
+            this.INTERSECTION = intersects[0].point;
+            // this.INTERSECTION = this.clampToGround(intersects[0].point);
+
+            // const object =  intersects[0].object;
+            // object.material.emissive.r = 1;
+            // intersected.push( object );
+            // const scale = Math.max(1, intersects[0].distance / 200);
+            const scale = intersects[0].distance / 200;
+            console.log(scale);
+            marker.scale.set(scale, scale, scale);
+            line.scale.z =  intersects[0].distance;
+            marker.position.copy(this.INTERSECTION);
+            marker.updateMatrixWorld(true);
+        } else {
+            this.INTERSECTION = undefined;
+            line.scale.z = 5;
+        }
+
+
+
+        marker.visible = this.INTERSECTION !== undefined;
     }
 
 
@@ -391,7 +479,7 @@ Adding a few internal states for reactivity
     }
 
     // Right select starts.
-    onSelectRightStart(ctrl = this.controllers[0]) {
+    onSelectRightStart(ctrl) {
     // No operation needed yet.
 
         // const tempMatrix = new THREE.Matrix4();
@@ -399,35 +487,19 @@ Adding a few internal states for reactivity
 
         // this.raycaster.ray.origin.setFromMatrixPosition(ctrl.matrixWorld);
         // this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-        this.raycaster.setFromXRController(ctrl);
-        // const interactiveLayers =  [];
-        const interactiveLayers = this.view.getLayers().filter(l => l.isOGC3DTilesLayer).map(o => o.object3d);
-
-        const intersects = this.raycaster.intersectObjects(interactiveLayers, true);
-        const line = ctrl.getObjectByName('ctrlHelper');
-
-        if (intersects.length > 0) {
-            this.INTERSECTION = intersects[0].point;
-            // this.INTERSECTION = this.clampToGround(intersects[0].point);
-
-            // const object =  intersects[0].object;
-            // object.material.emissive.r = 1;
-            // intersected.push( object );
-            // const scale = Math.max(1, intersects[0].distance / 200);
-            const scale = intersects[0].distance / 200;
-            console.log(scale);
-            this.marker.scale.set(scale, scale, scale);
-            line.scale.z =  intersects[0].distance;
-            this.marker.position.copy(this.INTERSECTION);
-            this.marker.updateMatrixWorld(true);
+        if (this.selectMarker1.visible) {
+            if (this.selectMarker1.visible && this.selectMarker2.visible) {
+                this.selectMarker1.visible = false;
+                this.selectMarker2.visible = false;
+                this.line.visible = false;
+                this.updateMarker(this.selectMarker1);
+                return;
+            }
+            this.updateMarker(this.selectMarker2);
+            this.updateLine(this.selectMarker1.position, this.selectMarker2.position);
         } else {
-            this.INTERSECTION = undefined;
-            line.scale.z = 5;
+            this.updateMarker(this.selectMarker1);
         }
-
-
-
-        this.marker.visible = this.INTERSECTION !== undefined;
     }
 
     // Left select starts.

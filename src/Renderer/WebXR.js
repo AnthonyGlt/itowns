@@ -58,6 +58,7 @@ const initializeWebXR = (view, options) => {
 
                 if (vrControls) {
                     vrControls.listenGamepad();
+                    vrControls.updateMarker();
                 }
 
                 if (options.callback) {
