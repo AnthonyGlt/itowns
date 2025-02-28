@@ -227,8 +227,51 @@ Adding a few internal states for reactivity
 
         this.line = new THREE.Line(geometry, material);
         this.view.scene.add(this.line);
+        this.createText(Math.abs(pt1.distanceTo(pt2)));
     }
 
+    createText(txt) {
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = 512;
+        this.canvas.height = 256;
+        const canvas = this.canvas;
+
+        // const context = this.canvas.getContext('2d');
+        // context.fillStyle = '#ffffff';
+        // context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // context.font = '60px Arial';
+        // context.fillStyle = '#000000';
+        // context.textAlign = 'center';
+        // context.fillText('Hello VR', this.canvas.width / 2, this.canvas.height / 2);
+
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.font = '48px sans-serif';
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(`${txt}`, canvas.width / 2, canvas.height / 2);
+        this.texture = new THREE.CanvasTexture(this.canvas);
+        const material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.1), material);
+        // Position the mesh above the controller
+        plane.position.set(0, 0.2, 0); // tweak these values as needed
+
+        // Attach the canvasMesh to the controller
+        this.controllers[0].add(plane);
+    }
+    updateCanvasText(newText) {
+        const context = this.canvas.getContext('2d');
+
+        // Clear the previous text
+        context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Redraw the new text
+        context.fillText(`${newText}`, this.canvas.width / 2, this.canvas.height / 2);
+
+        // Mark the texture for an update
+        this.texture.needsUpdate = true;
+    }
     updateLine(pt1, pt2) {
         if (!this.line) {
             return this.createLine(pt1, pt2);
@@ -249,6 +292,8 @@ Adding a few internal states for reactivity
         // Flag the position attribute for update
         this.line.geometry.attributes.position.needsUpdate = true;
         this.line.visible = true;
+
+        this.updateCanvasText(Math.abs(pt1.distanceTo(pt2)));
     }
 
     updateMarker(marker = this.marker) {
@@ -273,7 +318,7 @@ Adding a few internal states for reactivity
             // intersected.push( object );
             // const scale = Math.max(1, intersects[0].distance / 200);
             const scale = intersects[0].distance / 200;
-            console.log(scale);
+            // console.log(scale);
             marker.scale.set(scale, scale, scale);
             line.scale.z =  intersects[0].distance;
             marker.position.copy(this.INTERSECTION);
