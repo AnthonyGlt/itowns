@@ -130,6 +130,9 @@ class VRControls {
         }
     }
 
+    getController(handedness) {
+        return this.controllers.filter(o => o.name === handedness)[0];
+    }
 
     // Register event listeners for controllers.
     setupEventListeners(controller) {
@@ -258,7 +261,7 @@ Adding a few internal states for reactivity
         plane.position.set(0, 0.2, 0); // tweak these values as needed
 
         // Attach the canvasMesh to the controller
-        this.controllers[0].add(plane);
+        this.getController('right').add(plane);
     }
     updateCanvasText(newText) {
         const context = this.canvas.getContext('2d');
@@ -277,18 +280,23 @@ Adding a few internal states for reactivity
             return this.createLine(pt1, pt2);
         }
         // Assuming this.line already exists and its geometry has 2 vertices
-        const positions = this.line.geometry.attributes.position.array;
+        // const positions = this.line.geometry.attributes.position.array;
+        //
+        // // Update first point (pt1)
+        // positions[0] = pt1.x;
+        // positions[1] = pt1.y;
+        // positions[2] = pt1.z;
+        //
+        // // Update second point (pt2)
+        // positions[3] = pt2.x;
+        // positions[4] = pt2.y;
+        // positions[5] = pt2.z;
 
-        // Update first point (pt1)
-        positions[0] = pt1.x;
-        positions[1] = pt1.y;
-        positions[2] = pt1.z;
+        // this.line.setFromPoints(pt1, pt2);
 
-        // Update second point (pt2)
-        positions[3] = pt2.x;
-        positions[4] = pt2.y;
-        positions[5] = pt2.z;
-
+        // update line points position
+        this.line.geometry.setFromPoints([pt1, pt2]);
+        this.line.computeLineDistances(); //
         // Flag the position attribute for update
         this.line.geometry.attributes.position.needsUpdate = true;
         this.line.visible = true;
@@ -297,10 +305,7 @@ Adding a few internal states for reactivity
     }
 
     updateMarker(marker = this.marker) {
-        // todo getter right/left
-        let ctrl = this.controllers.filter(o => o.name === 'right');
-        if (!ctrl || !ctrl[0]) { return; }
-        ctrl = ctrl[0];
+        const ctrl = this.getController('right');
         this.raycaster.setFromXRController(ctrl);
         // const interactiveLayers =  [];
         const interactiveLayers = this.view.getLayers().filter(l => l.isOGC3DTilesLayer).map(o => o.object3d);
@@ -327,8 +332,6 @@ Adding a few internal states for reactivity
             this.INTERSECTION = undefined;
             line.scale.z = 5;
         }
-
-
 
         marker.visible = this.INTERSECTION !== undefined;
     }
