@@ -29,8 +29,9 @@
             var positionOnGlobe = { longitude: 4.818, latitude: 45.7354, altitude: 3000 };
             var placement = {
                 coord: new itowns.Coordinates('EPSG:4326', 4.818, 45.7354),
+                // coord: new itowns.Coordinates('EPSG:4326',6.7627851, 45.3273677),
                 range: 3000,
-                tilt: 45,
+                tilt: 5,
             }
             var meshes = [];
             var linesBus = [];
@@ -60,7 +61,7 @@
                 view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
             }
             itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
-            itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+            // itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
 
             var color = new itowns.THREE.Color();
             var tile;
@@ -125,7 +126,7 @@
                     }
                 }
             });
-            view.addLayer(lyonTclBusLayer);
+            // view.addLayer(lyonTclBusLayer);
 
             function colorBuildings(properties) {
                 if (properties.usage_1 === 'Résidentiel') {
@@ -209,7 +210,7 @@
                     }
                 }
             });
-            view.addLayer(wfsBuildingLayer);
+            // view.addLayer(wfsBuildingLayer);
 
             var menuGlobe = new GuiTools('menuDiv', view);
             // Listen for globe full initialisation event

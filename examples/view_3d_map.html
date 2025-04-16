@@ -32,8 +32,9 @@
 
             // Define camera initial position
             const placement = {
-                coord: new itowns.Coordinates('EPSG:4326', 2.351323, 48.856712),
-                range: 25000000,
+                // coord: new itowns.Coordinates('EPSG:4326', 2.351323, 48.856712),
+                coord: new itowns.Coordinates('EPSG:4326', 2.5, 48.799999),
+                range: 250,
             }
 
             // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
@@ -67,33 +68,49 @@
             // defined in a json file.
             function addElevationLayerFromConfig(config) {
                 config.source = new itowns.WMTSSource(config.source);
+                config.clampValues= {
+                    // min: -4000
+                    min: 0
+                };
+                config.noDataValue= -99999;
+
+                // config.zoom = {
+                //     min: 0,
+                //     max: 16
+                // }
                 view.addLayer(
                     new itowns.ElevationLayer(config.id, config),
                 ).then(debugMenu.addLayerGUI.bind(debugMenu));
             }
-            itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
-            itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+            itowns.Fetcher.json('./layers/JSONLayers/stmaur.json').then(addElevationLayerFromConfig);
+            // itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
 
-
+            window.addEventListener('click', function (e) {
+                var picked = view.pickObjectsAt(e);
+                if(picked.length === 1) {
+                    var tile = picked[0].object.getExtentsByProjection('EPSG:4326')[0];
+                    console.log('Tile - zoom: ' + tile.zoom + ' col: ' + tile.col + ' row: ' + tile.row);
+                }
+            });
             // ---------- ADD SOME WIDGETS : ----------
 
             // ADD A SCALE :
             const scale = new itowns_widgets.Scale(view, { position: 'bottom-right', translate: { x: -80 } });
 
             // ADD A MINIMAP :
-            const minimap = new itowns_widgets.Minimap(
-                view,
-                new itowns.ColorLayer('minimap', {
-                    source: new itowns.VectorTilesSource({
-                        style: "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json",
-                        // We don't display mountains and plot related data to ease visualisation
-                        filter: (layer) => !layer['source-layer'].includes('oro_')
-                            && !layer['source-layer'].includes('parcellaire'),
-                    }),
-                    addLabelLayer: { performance: true },
-                }),
-                { cursor: '+' },
-            );
+            // const minimap = new itowns_widgets.Minimap(
+            //     view,
+            //     new itowns.ColorLayer('minimap', {
+            //         source: new itowns.VectorTilesSource({
+            //             style: "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json",
+            //             // We don't display mountains and plot related data to ease visualisation
+            //             filter: (layer) => !layer['source-layer'].includes('oro_')
+            //                 && !layer['source-layer'].includes('parcellaire'),
+            //         }),
+            //         addLabelLayer: { performance: true },
+            //     }),
+            //     { cursor: '+' },
+            // );
 
             // ADD NAVIGATION TOOLS :
             const navigation = new itowns_widgets.Navigation(view, {
@@ -121,7 +138,7 @@
                     return map;
                 },
                 onSelected: (coordinates) => {
-                    view.controls.lookAtCoordinate({ coord: coordinates, range: 20000, tilt: 45, heading: 0 });
+                    view.controls.lookAtCoordinate({ coord: coordinates, range: 1000, tilt: 45, heading: 0 }, false);
                 },
             }
 

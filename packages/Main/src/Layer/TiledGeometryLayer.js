@@ -313,19 +313,35 @@ class TiledGeometryLayer extends GeometryLayer {
             return undefined;
         }
 
+
         // do proper culling
-        node.visible = !this.culling(node, context.camera);
+        node.visible =  !this.culling(node, context.camera);// || node.extent.toString() == '4.82299804687545.716857910156254.8202514648437545.714111328125';
+        // node.visible =  true;// || node.extent.toString() == '4.82299804687545.716857910156254.8202514648437545.714111328125';
+        // node.visible =  Array.from(node.children).some(child => child.visible === true) || !this.culling(node, context.camera);// || node.extent.toString() == '4.82299804687545.716857910156254.8202514648437545.714111328125';
+        // if (node.extent.toString() ==
 
         if (node.visible) {
             let requestChildrenUpdate = false;
 
             node.material.visible = true;
             this.info.update(node);
+            // if (node.pendingSubdivision || (TiledGeometryLayer.hasEnoughTexturesToSubdivide(context, node) && this.subdivision(context, this, node))) {
+            if ((TiledGeometryLayer.hasEnoughTexturesToSubdivide(context, node) && this.subdivision(context, this, node))) {
+            // if (node.pendingSubdivision || (this.subdivision(context, this, node))) {
+            // if (node.level < MAX_SUBDIVISION_LEVEL && this.subdivision(context, this, node)) {
+                // if (!node.shouldBeD) {
+                //     node.shouldBeD = true;
+                //     return undefined;
+                // }
+            // if (!node.pendingSubdivision && node.level < MAX_SUBDIVISION_LEVEL && this.subdivision(context, this, node)) {
+            // if (this.subdivision(context, this, node)) {
 
-            if (node.level < MAX_SUBDIVISION_LEVEL && this.subdivision(context, this, node)) {
                 this.subdivideNode(context, node);
                 // display iff children aren't ready
                 node.material.visible = node.pendingSubdivision;
+                // node.material.visible = node.pendingSubdivision || node.extent.toString() == '4.82299804687545.716857910156254.8202514648437545.714111328125';
+                // node.material.visible = true;
+                // node.material.visible = false;
                 this.info.update(node);
                 requestChildrenUpdate = true;
             }
@@ -354,9 +370,93 @@ class TiledGeometryLayer extends GeometryLayer {
 
     // eslint-disable-next-line
     culling(node, camera) {
+        if (node.extent.toString() === '4.82299804687545.716857910156254.8202514648437545.714111328125') {
+            console.log(JSON.stringify(node.obb.box3D));
+        }
         return !camera.isBox3Visible(node.obb.box3D, node.matrixWorld);
+        // return false;
     }
 
+
+    /**
+     * Tell if a node has enough elevation or color textures to subdivide.
+     * Subdivision is prevented if:
+     * <ul>
+     *  <li>the node is covered by at least one elevation layer and if the node
+     *  doesn't have an elevation texture yet</li>
+     *  <li>a color texture is missing</li>
+     * </ul>
+     *
+     * @param {Object} context - The context of the update; see the {@link
+ * MainLoop} for more informations.
+ * @param {TileMesh} node - The node to subdivide.
+ *
+ * @returns {boolean} False if the node can not be subdivided, true
+ * otherwise.
+ */
+    static hasEnoughTexturesToSubdivide(context, node) {
+        const layerUpdateState = node.layerUpdateState || {};
+        const nodeLayer = node.material.getElevationLayer();
+
+        for (const e of context.elevationLayers) {
+            const extents = node.getExtentsByProjection(e.crs);
+            const zoom = extents[0].zoom;
+            if (zoom > e.zoom.max || zoom < e.zoom.min) {
+                continue;
+            }
+            if (!e.frozen && e.ready && e.source.extentInsideLimit(node.extent, zoom) && (!nodeLayer || nodeLayer.level < 0)) {
+            // no stop subdivision in the case of a loading error
+                if (layerUpdateState[e.id] && layerUpdateState[e.id].inError()) {
+                    continue;
+                }
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+    // static hasEnoughTexturesToSubdivide(context, node) {
+    //         const layerUpdateState = node.layerUpdateState || {};
+    //         let nodeLayer = node.material.getElevationLayer();
+    //
+    //         for (const e of context.elevationLayers) {
+    //             const extents = node.getExtentsByProjection(e.crs);
+    //             const zoom = extents[0].zoom;
+    //             if (zoom > e.zoom.max || zoom < e.zoom.min) {
+    //                 continue;
+    //             }
+    //             if (!e.frozen && e.ready && e.source.extentInsideLimit(node.extent, zoom) && (!nodeLayer || nodeLayer.level < 0)) {
+    //             // no stop subdivision in the case of a loading error
+    //                 if (layerUpdateState[e.id] && layerUpdateState[e.id].inError()) {
+    //                     continue;
+    //                 }
+    //                 return false;
+    //             }
+    //         }
+    //
+    //         for (const c of context.colorLayers) {
+    //             if (c.frozen || !c.visible || !c.ready) {
+    //                 continue;
+    //             }
+    //             const extents = node.getExtentsByProjection(c.crs);
+    //             const zoom = extents[0].zoom;
+    //             if (zoom > c.zoom.max || zoom < c.zoom.min) {
+    //                 continue;
+    //             }
+    //             // no stop subdivision in the case of a loading error
+    //             if (layerUpdateState[c.id] && layerUpdateState[c.id].inError()) {
+    //                 continue;
+    //             }
+    //             nodeLayer = node.material.getLayer(c.id);
+    //             if (c.source.extentInsideLimit(node.extent, zoom) && (!nodeLayer || nodeLayer.level < 0)) {
+    //                 return false;
+    //             }
+    //         }
+    //         return true;
+    //     }
+    //
 
     /**
      * Subdivides a node of this layer. If the node is currently in the process

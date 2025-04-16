@@ -27,8 +27,8 @@ function refinementCommandCancellationFn(cmd) {
         || !cmd.layer.source._featuresCaches[cmd.layer.crs]) {
         return true;
     }
-
     return !cmd.requester.material.visible;
+    // return !cmd.requester.visible;
 }
 
 function buildCommand(view, layer, extentsSource, extentsDestination, requester) {
@@ -164,9 +164,9 @@ export function updateLayeredMaterialNodeImagery(context, layer, node, parent) {
 }
 
 export function updateLayeredMaterialNodeElevation(context, layer, node, parent) {
-    if (node.pendingSubdivision) {
-        return;
-    }
+    // if (node.pendingSubdivision) {
+    //     return;
+    // }
     const material = node.material;
     if (!parent || !material) {
         return;
