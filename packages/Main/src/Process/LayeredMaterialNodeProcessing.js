@@ -27,8 +27,8 @@ function refinementCommandCancellationFn(cmd) {
         || !cmd.layer.source._featuresCaches[cmd.layer.crs]) {
         return true;
     }
+
     return !cmd.requester.material.visible;
-    // return !cmd.requester.visible;
 }
 
 function buildCommand(view, layer, extentsSource, extentsDestination, requester) {

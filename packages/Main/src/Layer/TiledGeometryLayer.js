@@ -370,13 +370,8 @@ class TiledGeometryLayer extends GeometryLayer {
 
     // eslint-disable-next-line
     culling(node, camera) {
-        if (node.extent.toString() === '4.82299804687545.716857910156254.8202514648437545.714111328125') {
-            console.log(JSON.stringify(node.obb.box3D));
-        }
         return !camera.isBox3Visible(node.obb.box3D, node.matrixWorld);
-        // return false;
     }
-
 
     /**
      * Tell if a node has enough elevation or color textures to subdivide.
@@ -388,12 +383,12 @@ class TiledGeometryLayer extends GeometryLayer {
      * </ul>
      *
      * @param {Object} context - The context of the update; see the {@link
- * MainLoop} for more informations.
- * @param {TileMesh} node - The node to subdivide.
- *
- * @returns {boolean} False if the node can not be subdivided, true
- * otherwise.
- */
+     * MainLoop} for more informations.
+     * @param {TileMesh} node - The node to subdivide.
+     *
+     * @returns {boolean} False if the node can not be subdivided, true
+     * otherwise.
+     */
     static hasEnoughTexturesToSubdivide(context, node) {
         const layerUpdateState = node.layerUpdateState || {};
         const nodeLayer = node.material.getElevationLayer();
