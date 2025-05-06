@@ -30,6 +30,11 @@ void main() {
     vec4 diffuseColor = vec4(diffuse, opacity);
 #include <map_particle_fragment>
 #include <color_fragment>
+    #ifdef USE_COLOR_ALPHA
+    if (vColor.a == 0.0) {
+        discard;
+    }
+    #endif
 
 #include <alphatest_fragment>
 #include <alphahash_fragment>
