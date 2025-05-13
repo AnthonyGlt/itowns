@@ -167,7 +167,17 @@
                 input_url.value = url;
                 load(url);
             }
-
+            function updatePointMaterial(obj) {
+                if (obj && obj.isPoints) {
+                    let classification = {...obj.material.classificationScheme};
+                    if (classification) {
+                        classification[6].visible = false;
+                        // classification[6].opacity = 0;
+                        obj.material.classificationScheme = classification;
+                        obj.material.recomputeClassification();
+                    }
+                }
+            }
 
             function load(url) {
                 const source = new OGC3DTilesSource({ url });
@@ -197,10 +207,23 @@
                     zoomToLayer(view, layer);
                     window.addEventListener('click',
                         (event) => fillHTMLWithPickingInfo(event, pickingArgs), false);
+
+
+
+
                 });
 
                 window.layer.whenReady
-                    .then(() => debug.createOGC3DTilesDebugUI(gui, view, window.layer));
+                    .then(() => {
+                        debug.createOGC3DTilesDebugUI(gui, view, window.layer);
+                        window.layer.addEventListener(itowns.OGC3DTILES_LAYER_EVENTS.LOAD_MODEL, function (e) {
+                            window.layer.object3d.traverse(function (obj) {
+                                // updatePointMaterial(obj); // Updating already loaded objects
+                            }.bind(window.layer));
+                        });
+
+
+                    });
             }
 
             function loadLyon() {

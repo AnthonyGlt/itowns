@@ -49,11 +49,11 @@ void main() {
         } else if (mode == PNTS_MODE_NORMAL) {
             vColor.rgb = abs(normal);
         } else if (mode == PNTS_MODE_COLOR) {
-#if defined(USE_COLOR)
-            vColor.rgb = color.rgb;
-#elif defined(USE_COLOR_ALPHA)
-            vColor = color;
-#endif
+            #if defined(USE_COLOR)
+                        vColor.rgb = color.rgb;
+            #elif defined(USE_COLOR_ALPHA)
+                        vColor = color;
+            #endif
         } else if (mode == PNTS_MODE_RETURN_NUMBER) {
             vec2 uv = vec2(returnNumber/255., 0.5);
             vColor = texture2D(discreteTexture, uv);

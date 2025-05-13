@@ -51,7 +51,7 @@ export const ClassificationScheme = {
         3: { visible: true, name: 'low vegetation', color: new THREE.Color(0.0,  1.0,  0.0), opacity: 1.0 },
         4: { visible: true, name: 'medium vegetation', color: new THREE.Color(0.0,  0.8,  0.0), opacity: 1.0 },
         5: { visible: true, name: 'high vegetation', color: new THREE.Color(0.0,  0.6,  0.0), opacity: 1.0 },
-        6: { visible: true, name: 'building', color: new THREE.Color(1.0,  0.66, 0.0), opacity: 1.0 },
+        6: { visible: false, name: 'building', color: new THREE.Color(1.0,  0.66, 0.0), opacity: 1.0 },
         7: { visible: true, name: 'low point(noise)', color: new THREE.Color(1.0,  0.0,  1.0), opacity: 1.0 },
         8: { visible: true, name: 'key-point', color: new THREE.Color(1.0,  0.0,  0.0), opacity: 1.0 },
         9: { visible: true, name: 'water', color: new THREE.Color(0.0,  0.0,  1.0), opacity: 1.0 },
@@ -65,7 +65,7 @@ export const ClassificationScheme = {
 const DiscreteScheme = {
     DEFAULT: {
         0: { visible: true, name: '0', color: new THREE.Color('rgb(67, 99, 216)'), opacity: 1.0 },
-        1: { visible: true, name: '1', color: new THREE.Color('rgb(60, 180, 75);'), opacity: 1.0 },
+        1: { visible: true, name: '1', color: new THREE.Color('rgb(60, 180, 75)'), opacity: 1.0 },
         2: { visible: true, name: '2', color: new THREE.Color('rgb(255, 255, 25)'), opacity: 1.0 },
         3: { visible: true, name: '3', color: new THREE.Color('rgb(145, 30, 180)'), opacity: 1.0 },
         4: { visible: true, name: '4', color: new THREE.Color('rgb(245, 130, 49)'), opacity: 1.0 },
@@ -213,6 +213,7 @@ class PointsMaterial extends THREE.ShaderMaterial {
             fog: true,
             precision: 'highp',
             vertexColors: true,
+
         });
         this.uniforms = THREE.UniformsUtils.merge([
             // THREE.PointsMaterial uniforms
@@ -221,9 +222,25 @@ class PointsMaterial extends THREE.ShaderMaterial {
         ]);
         this.vertexShader = PointsVS;
         this.fragmentShader = PointsFS;
+        // this.transparent = true;
+        // this.blending = THREE.NormalBlending;
+        // this.depthWrite = false;
+        // this.depthTest = false;  // Try this as well
+
+        // this.alphaTest = 10000000; // This i
+
 
         this.userData.needTransparency = {};
         this.gradients = gradients;
+
+        this.transparent = true;
+        this.depthWrite = false;
+        this.depthTest = true;
+        this.blending = THREE.CustomBlending;
+        this.blendEquation = THREE.AddEquation;
+        this.blendSrc = THREE.SrcAlphaFactor;
+        this.blendDst = THREE.OneFactor;
+
         this.gradientTexture = new THREE.CanvasTexture();
 
         CommonMaterial.setDefineMapping(this, 'PNTS_MODE', PNTS_MODE);
